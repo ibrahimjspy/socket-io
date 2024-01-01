@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { SetStateAction, useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
 
-const socket = io('http://localhost:3001', { autoConnect: false });
+const socket = io('http://23.22.190.84:3000', { autoConnect: false });
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,17 +10,17 @@ export default function Home() {
   const [videoUrl, setVideoUrl] = useState('');
   const [progressUpdates, setProgressUpdates] = useState([]);
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: { target: { value: SetStateAction<string>; }; }) => {
     setInputData(e.target.value);
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
     try {
       const parsedData = JSON.parse(inputData);
       setIsLoading(true);
 
-      axios.post("http://localhost:8080/video/generation/framework/script", parsedData)
+      axios.post("http://23.22.190.84:3000/api/v1/ai/video/generate", parsedData)
         .then(response => {
           console.log(response.data);
           setIsLoading(false);
@@ -46,9 +46,13 @@ export default function Home() {
       if(data.url){
         setVideoUrl(data.url);
       }
+      if(data.metadata){
+        console.log(data.metadata);
+        alert(data.metadata);
+      }
       setProgressUpdates(prevUpdates => {
         let updates = [...prevUpdates, data.message];
-        if (updates.length > 7) {
+        if (updates.length > 20) {
           updates = updates.slice(-7); // Keep only the last 7 updates
         }
         return updates;
@@ -64,6 +68,13 @@ export default function Home() {
 
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', backgroundColor: '#f3f3f3' }}>
+          <div className="ball small" style={{ top: '10%', left: '20%' }}></div>
+          <div className="ball small" style={{ top: '90%', left: '5%' }}></div>
+          <div className="ball small" style={{ top: '30%', left: '30%' }}></div>
+          <div className="ball medium" style={{ top: '50%', left: '80%' }}></div>
+          <div className="ball medium" style={{ top: '90%', left: '90%' }}></div>
+
+          <div className="ball large" style={{ top: '70%', left: '10%' }}></div>
       <h1 style={{ color: '#5d3fd3', textAlign: 'center', marginBottom: '30px', animation: 'fadeIn 1s' }}>AI video stitching demo</h1>
       <form onSubmit={handleFormSubmit} style={{ width: '50%', minWidth: '300px', animation: 'slideIn 1s' }}>
         <textarea 
@@ -84,21 +95,25 @@ export default function Home() {
       </div>}
       
       <div style={{ marginTop: '20px', width: '50%', minWidth: '300px', animation: 'fadeIn 2s' }}>
-        <h2 style={{ color: '#5d3fd3', textAlign: 'center' }}>Progress Updates</h2>
-        <ul style={{ listStyleType: 'none', padding: 0 }}>
-          {progressUpdates.map((update, index) => (
-            <li key={index} style={{ backgroundColor: '#eae7ff', padding: '10px', marginBottom: '5px', borderRadius: '4px', transition: 'transform 0.3s', cursor: 'pointer' }}
-                onMouseOver={e => e.target.style.transform = 'scale(1.05)'}
-                onMouseOut={e => e.target.style.transform = 'scale(1)'}>
-              {update}
-            </li>
-          ))}
-        </ul>
-        {videoUrl && <div style={{ marginTop: '20px', textAlign: 'center', backgroundColor: '#e8f5e9', padding: '10px', borderRadius: '4px' }}>
+  <h2 style={{ color: '#5d3fd3', textAlign: 'center' }}>Progress Updates</h2>
+  <ul style={{ listStyleType: 'none', padding: 0 }}>
+    {progressUpdates.map((update, index) => (
+      <li key={index} style={{ display: 'flex', alignItems: 'center', backgroundColor: '#eae7ff', padding: '10px', marginBottom: '5px', borderRadius: '4px', transition: 'transform 0.3s' }}
+          onMouseOver={e => e.target.style.transform = 'scale(1.05)'}
+          onMouseOut={e => e.target.style.transform = 'scale(1)'}>
+        {update}
+        {/* Show loader next to the last item */}
+        {index === progressUpdates.length - 1 && !videoUrl && (
+          <div className="loader" style={{ marginLeft: '500px', marginBottom:'20px' }}></div>
+        )}
+      </li>
+    ))}
+  </ul>
+  {videoUrl && <div style={{ marginTop: '20px', textAlign: 'center', backgroundColor: '#e8f5e9', padding: '10px', borderRadius: '4px' }}>
         <p style={{ fontWeight: 'bold', color: '#2e7d32' }}>Video Generated:</p>
         <a href={videoUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#388e3c', textDecoration: 'none', fontWeight: 'bold' }}>{videoUrl}</a>
       </div>}
-      </div>
+</div>
 
       <style jsx global>
         
@@ -108,6 +123,7 @@ export default function Home() {
             padding: 0;
             overscroll-behavior: none;
             background-color: #fafafa;
+            background: linear-gradient(135deg, #9c8cb9 0%, #76a5af 100%);
           }
 
           /* Custom Scrollbar Styling */
@@ -159,6 +175,60 @@ export default function Home() {
       
           .loader {
             margin-top: 20px; /* Space above loader */
+          }
+          /* Ball animations */
+          @keyframes floatAnimation {
+            0% {
+              transform: translateY(0) scale(1);
+            }
+            50% {
+              transform: translateY(-20vh) scale(1.2);
+            }
+            100% {
+              transform: translateY(0) scale(1);
+            }
+          }
+          
+          /* Ball styles */
+          .ball {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.7;
+            background-color: #a890d3; /* Lighter purple */
+            animation: floatAnimation ease-in-out infinite;
+          }
+          
+          /* Different sizes and animation durations for balls */
+          .ball.small {
+            width: 20px;
+            height: 20px;
+            animation-duration: 5s;
+          }
+          
+          .ball.medium {
+            width: 30px;
+            height: 30px;
+            animation-duration: 7s;
+          }
+          
+          .ball.large {
+            width: 40px;
+            height: 40px;
+            animation-duration: 10s;
+          }
+
+          .loader {
+            border: 5px solid #f3f3f3; /* Light grey border */
+            border-top: 5px solid #8a2be2; /* Purplish color for the top border */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+          }
+          
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
           }
         `}
       </style>
