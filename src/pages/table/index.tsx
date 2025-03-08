@@ -3,11 +3,11 @@ import { CSKLOGO, GTLOGO, KKRLOGO, MI_ICON, RCBLOGO, TROPYICON } from './constan
 
 const Home = () => {
   const [contestants] = useState([
-    { name: 'hadi', team: 'GT', points: 10.0, championships: 2, color: 'rgba(169, 169, 169, 0.1)', logo: GTLOGO },
-    { name: 'wahab', team: 'RCB', points: 7.5, championships: 1, color: 'rgba(255, 0, 0, 0.1)', logo: RCBLOGO },
-    { name: 'adeel', team: 'KKR', points: 12.5, championships: 1, color: 'rgba(173, 216, 230, 0.1)', logo: KKRLOGO },
-    { name: 'ibrahim', team: 'CSK', points: 8.0, championships: 0, color: 'rgba(224, 223, 164, 0.1)', logo: CSKLOGO },
-    { name: 'Barik', team: 'MI', points: 5, championships: 0, color: 'rgba(144, 238, 144, 0.1)', logo: MI_ICON }
+    { name: 'hadi', team: 'GT', points: 42.5, championships: 2, color: 'rgba(169, 169, 169, 0.1)', logo: GTLOGO },
+    { name: 'wahab', team: 'SRH', points: 38.5, championships: 1, color: 'rgba(255, 0, 0, 0.1)', logo: RCBLOGO },
+    { name: 'adeel', team: 'KKR', points: 54.5, championships: 2, color: '#FFD700', logo: KKRLOGO },
+    { name: 'ibrahim', team: 'CSK', points: 37.5, championships: 0, color: 'rgba(224, 223, 164, 0.1)', logo: CSKLOGO },
+    { name: 'Barik', team: 'MI', points:14.0, championships: 0, color: 'rgba(144, 238, 144, 0.1)', logo: MI_ICON }
   ].sort((a, b) => b.points - a.points));
 
   return (

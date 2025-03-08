@@ -5,24 +5,11 @@ import { initializeApp} from "firebase/app";
 import firebase from 'firebase/compat/app';
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
-const socket = io('http://localhost:3001/', { autoConnect: false });
+const socket = io('https://test-api.kosmic.ai', { autoConnect: false, transports: ['websocket'], });
 
 export default function Home() {
   const [videoUrl, setVideoUrl] = useState('');
-  const [progressUpdates, setProgressUpdates] = useState([]);
-
-// Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyAaCI5z6DkyHNfUtwSi2Yji4HotobYhRDU",
-  authDomain: "test-notification-30dcf.firebaseapp.com",
-  projectId: "test-notification-30dcf",
-  storageBucket: "test-notification-30dcf.appspot.com",
-  messagingSenderId: "71181934722",
-  appId: "1:71181934722:web:d530335cf6dc100ef5949b"
-};
-
-// Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
+  const [progressUpdates, setProgressUpdates] = useState<any>([]);
 
 
   useEffect(() => {
@@ -32,8 +19,17 @@ const app = firebase.initializeApp(firebaseConfig);
       console.log('Connected to WebSocket server');
     });
 
-    socket.on('messages', (data) => {
-      console.log('Chat message', data);
+    socket.on('progressUpdate', (data) => {
+      console.log('Video generated:', data);
+      const progress = data.progress;
+      const existingProgresses = progressUpdates.map((update: any) => update.progress);
+      console.log('existingProgresses', existingProgresses);
+      if(existingProgresses.includes(progress)){
+        console.log('progress already exists');
+        return;
+      }else{
+        setProgressUpdates((prevUpdates) => [...prevUpdates,  data]);
+      }
     });
 
     return () => {
@@ -42,86 +38,10 @@ const app = firebase.initializeApp(firebaseConfig);
       socket.disconnect();
     };
   }, []);
-  useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/firebase-messaging-sw.js')
-        .then(function(registration) {
-          console.log('Service worker registration succeeded:', registration);
-        })
-        .catch(function(error) {
-          console.log('Service worker registration failed:', error);
-        });
-    }
-    const messaging = getMessaging(app);
 
-    // Request permission for push notifications
-    Notification.requestPermission().then((permission) => {
-      if (permission === "granted") {
-        console.log("Notification permission granted.");
-        // Get Firebase Messaging instance
-  
-        console.log(messaging)
-        // Get the browser token for Firebase Cloud Messaging
-        getToken(messaging, { vapidKey: 'BO2xehHzcqok6lvq4f8eKSbegUJ1JjcejfB1M0VE-RCehbXgxUtadrkxGViClfXuHexgnu0ZoKs2CBGmBKpMX0M' }).then((token) => {
-          if (token) {
-            // Use the token for sending push notifications
-            console.log("Firebase token:", token);
-          } else {
-            console.log("No token received");
-          }
-        }).catch((error) => {
-          console.error("Error getting token:", error);
-        });
-      }
-    });
-
-    console.log('in messeging')
-    onMessage(messaging, (payload) => {
-      console.log('Message received. ', payload);
-      
-      // Check if browser supports notifications
-      if (!("Notification" in window)) {
-        alert("This browser does not support system notifications");
-        return;
-      }
-    
-      // Check whether notification permissions have already been granted
-      if (Notification.permission === "granted") {
-        // If it's okay, let's create a notification
-        console.log('Notification received from firebase')
-
-        showNotification(payload);
-      }
-      // Otherwise, we need to ask the user for permission
-      else if (Notification.permission !== "denied") {
-        console.log('no permission to show messafe')
-        Notification.requestPermission().then(permission => {
-          // If the user accepts, let's create a notification
-          if (permission === "granted") {
-            showNotification(payload);
-          }
-        });
-      }
-      // At last, if the user has denied notifications, and you 
-      // want to be respectful there is no need to bother them any more.
-    });
-    
-    function showNotification(payload:any) {
-      const notificationTitle = payload.notification.title;
-      const notificationOptions = {
-        body: payload.notification.body,
-        icon: payload.notification.icon, // Optional: you can provide an icon URL
-        // You can add more options here. For more options, see:
-        // https://developer.mozilla.org/en-US/docs/Web/API/Notification/Notification
-      };
-    
-      new Notification(notificationTitle, notificationOptions);
-      alert(payload.notification.body)
-    }
-  }, []);
 
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', backgroundColor: '#f3f3f3' }}>
+    <div style={{ fontFamily: 'Arial, sans-serif', height: '2000px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', backgroundColor: '#f3f3f3' }}>
           <div className="ball small" style={{ top: '10%', left: '20%' }}></div>
           <div className="ball small" style={{ top: '90%', left: '5%' }}></div>
           <div className="ball small" style={{ top: '30%', left: '30%' }}></div>
@@ -129,18 +49,18 @@ const app = firebase.initializeApp(firebaseConfig);
           <div className="ball medium" style={{ top: '90%', left: '90%' }}></div>
 
           <div className="ball large" style={{ top: '70%', left: '10%' }}></div>
-      <h1 style={{ color: '#5d3fd3', textAlign: 'center', marginBottom: '30px', animation: 'fadeIn 1s' }}>Notification demo</h1>
+      <h1 style={{ color: '#5d3fd3', textAlign: 'center', marginBottom: '30px', animation: 'fadeIn 1s' }}>Ai demo</h1>
       
       <div style={{ marginTop: '20px', width: '50%', minWidth: '300px', animation: 'fadeIn 2s' }}>
-  <h2 style={{ color: '#90EE90', textAlign: 'center', marginBottom: '30px' }}>Notification Updates</h2>
+  <h2 style={{ color: '#90EE90', textAlign: 'center', marginBottom: '30px' }}>Ai Updates</h2>
   <ul style={{ listStyleType: 'none', padding: 0 }}>
-    {/* {progressUpdates.map((update: any, index) => (
+    {progressUpdates.map((update: any, index) => (
       <li key={index} style={{ display: 'flex', alignItems: 'center', backgroundColor: '#eae7ff', padding: '10px', marginBottom: '5px', borderRadius: '4px', transition: 'transform 0.3s' }}
           onMouseOver={e => e.target.style.transform = 'scale(1.05)'}
           onMouseOut={e => e.target.style.transform = 'scale(1)'}>
-        {`${update.message}`} 
+        {`${update.message} --- percentage: ${update.progress}` }
       </li>
-    ))} */}
+    ))}
   </ul>
   {videoUrl && <div style={{ marginTop: '20px', textAlign: 'center', backgroundColor: '#e8f5e9', padding: '10px', borderRadius: '4px' }}>
         <p style={{ fontWeight: 'bold', color: '#2e7d32' }}>Video Generated:</p>
