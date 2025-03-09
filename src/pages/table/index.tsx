@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { CSKLOGO, GTLOGO, KKRLOGO, MI_ICON, RCBLOGO, TROPYICON } from './constants';
 
-// Default data (won't matter on first load if you want to "start from zero")
+// Updated player colors for a modern look
 const initialContestants = [
-  { name: 'adeel', team: 'KKR', points: 0, sp: 0, championships: 2, color: 'rgba(255, 0, 0, 0.1)', logo: KKRLOGO },
-  { name: 'hadi', team: 'GT', points: 0, sp: 0, championships: 2, color: 'rgba(169, 169, 169, 0.1)', logo: GTLOGO },
-  { name: 'wahab', team: 'SRH', points: 0, sp: 0, championships: 1, color: 'rgba(255, 0, 0, 0.1)', logo: RCBLOGO },
-  { name: 'ibi', team: 'CSK', points: 0, sp: 0, championships: 0, color: 'rgba(224, 223, 164, 0.1)', logo: CSKLOGO },
-  { name: 'Mavia', team: 'MI', points: 0, sp: 0, championships: 0, color: 'rgba(144, 238, 144, 0.1)', logo: MI_ICON }
+  { name: 'Adeel', team: 'KKR', points: 0, sp: 0, championships: 2, color: 'rgba(220, 20, 60, 0.15)', logo: KKRLOGO },
+  { name: 'Hadi', team: 'GT', points: 0, sp: 0, championships: 2, color: 'rgba(30, 144, 255, 0.15)', logo: GTLOGO },
+  { name: 'Wahab', team: 'SRH', points: 0, sp: 0, championships: 1, color: 'rgba(255, 140, 0, 0.15)', logo: RCBLOGO },
+  { name: 'Ibi', team: 'CSK', points: 0, sp: 0, championships: 0, color: 'rgba(255, 215, 0, 0.15)', logo: CSKLOGO },
+  { name: 'Mavia', team: 'MI', points: 0, sp: 0, championships: 0, color: 'rgba(60, 179, 113, 0.15)', logo: MI_ICON }
 ];
 
 const Home = () => {
@@ -57,9 +57,9 @@ const Home = () => {
       {activeView === 'standings' ? (
         <Standings contestants={contestants} prevStandings={prevStandings} />
       ) : (
-        <ManageScores 
-          contestants={contestants} 
-          setContestants={setContestants} 
+        <ManageScores
+          contestants={contestants}
+          setContestants={setContestants}
           setPrevStandings={setPrevStandings}
         />
       )}
@@ -71,6 +71,7 @@ const Home = () => {
           background: linear-gradient(135deg, #0d1b2a, #1b263b);
           min-height: 100vh;
           color: #fff;
+          font-family: 'Arial', sans-serif;
         }
         .nav {
           margin-bottom: 20px;
@@ -117,58 +118,94 @@ const Standings = ({ contestants, prevStandings }) => {
       {/* Export container with heading added */}
       <div ref={standingsRef} className="export-container">
         <h2 className="export-heading">IPL</h2>
-        <table className="points-table">
-          <thead>
-            <tr>
-              <th>Logo</th>
-              <th>Name</th>
-              <th>Team</th>
-              <th>SP</th>
-              <th>Points</th>
-            </tr>
-          </thead>
-          <tbody>
-            {contestants.map((cont, index) => {
-              const prevIndex = prevStandings.findIndex(prev => prev.name === cont.name);
-              const rankChange = prevIndex !== -1 ? prevIndex - index : 0;
-              const prevContestant = prevStandings.find(prev => prev.name === cont.name);
-              const pointsDiff = prevContestant ? cont.points - prevContestant.points : 0;
-              return (
-                <tr key={cont.name} style={{ backgroundColor: cont.color }}>
-                  <td>
-                    <img src={cont.logo} alt={`${cont.team} Logo`} className="team-logo" />
-                  </td>
-                  <td>
-                    {cont.name} {cont.championships > 0 && '⭐'.repeat(cont.championships)}
-                    {rankChange !== 0 && (
-                      <sup style={{ 
-                        marginLeft: '4px', 
-                        fontSize: '0.8rem', 
-                        color: rankChange > 0 ? 'limegreen' : 'tomato'
-                      }}>
-                        {rankChange > 0 ? `↑${rankChange}` : `↓${Math.abs(rankChange)}`}
-                      </sup>
-                    )}
-                  </td>
-                  <td>{cont.team}</td>
-                  <td>{cont.sp}</td>
-                  <td>
-                    {cont.points}
-                    {pointsDiff !== 0 && (
-                      <sup style={{ 
-                        marginLeft: '4px', 
-                        fontSize: '0.8rem', 
-                        color: pointsDiff > 0 ? 'limegreen' : 'tomato'
-                      }}>
-                        {pointsDiff > 0 ? `↑${pointsDiff.toFixed(1)}` : `↓${Math.abs(pointsDiff).toFixed(1)}`}
-                      </sup>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div className="table-wrap">
+          <table className="points-table">
+            <thead>
+              <tr>
+                <th>Logo</th>
+                <th>Name</th>
+                <th>Team</th>
+                <th>SP</th>
+                <th>Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              {contestants.map((cont, index) => {
+                const prevIndex = prevStandings.findIndex(prev => prev.name === cont.name);
+                const rankChange = prevIndex !== -1 ? prevIndex - index : 0;
+                const prevContestant = prevStandings.find(prev => prev.name === cont.name);
+                const pointsDiff = prevContestant ? cont.points - prevContestant.points : 0;
+                return (
+                  <tr key={cont.name} style={{ backgroundColor: cont.color }}>
+                    {/* Logo */}
+                    <td>
+                      <img src={cont.logo} alt={`${cont.team} Logo`} className="team-logo" />
+                    </td>
+
+                    {/* Name + Rank Change */}
+                   <td className="left-align">
+  <span style={{ position: 'relative', display: 'inline-block' }}>
+    {/* Base Name + Championship Stars */}
+    {cont.name} {cont.championships > 0 && '⭐'.repeat(cont.championships)}
+
+    {/* Rank Change as Superscript */}
+    {rankChange !== 0 && (
+      <sup
+        style={{
+          position: 'absolute',
+          top: '-0.6em',       // Adjust vertically
+          right: '-1.5em',     // Adjust horizontally
+          fontSize: '0.65em',  // Makes it smaller
+          lineHeight: 1,
+          fontWeight: 'bold',
+          color: rankChange > 0 ? 'limegreen' : 'tomato'
+        }}
+      >
+        {rankChange > 0 ? '↑' : '↓'}
+        {Math.abs(rankChange)}
+      </sup>
+    )}
+  </span>
+</td>
+
+
+                    {/* Team */}
+                    <td>{cont.team}</td>
+
+                    {/* SP */}
+                    <td>{cont.sp}</td>
+
+                    {/* Points + Points Difference */}
+<td className="centered">
+  <span style={{ position: 'relative', display: 'inline-block' }}>
+    {/* Base Points */}
+    {cont.points}
+
+    {/* Exponent for Points Difference */}
+    {pointsDiff !== 0 && (
+      <sup
+        style={{
+          position: 'absolute',
+          top: '-0.9em',        // Adjust to move up/down
+          left: cont.points > 20 ? '2em' : '1em',      // Adjust to move left/right
+          fontSize: '0.65em',   // Makes it smaller than the base text
+          lineHeight: 1,
+          color: pointsDiff > 0 ? 'limegreen' : 'tomato',
+          fontWeight: 'bold'
+        }}
+      >
+        {pointsDiff > 0 ? '↑' : '↓'}
+        {Math.abs(pointsDiff).toFixed(1)}
+      </sup>
+    )}
+  </span>
+</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
         {/* Credit text added inside the export container */}
         <div className="credit">Credit: IBI</div>
       </div>
@@ -180,40 +217,83 @@ const Standings = ({ contestants, prevStandings }) => {
           margin-bottom: 20px;
         }
         .export-container {
-          width: 560px;
+          width: 90%;
+          max-width: 560px;
           margin: auto;
-          background: #0d1b2a;
+          background: rgba(255, 255, 255, 0.05);
           padding: 40px;
-          border: 2px solid #fff;
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          border-radius: 12px;
+          backdrop-filter: blur(8px);
+          font-family: 'Arial', sans-serif;
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
         }
         .export-heading {
           color: #fff;
-          font-size: 1.5rem;
+          font-size: 1.8rem;
           margin-bottom: 20px;
           text-align: center;
+          text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        .table-wrap {
+          overflow-x: auto;
         }
         .points-table {
           margin: auto;
-          border-collapse: collapse;
           width: 100%;
+          border-collapse: collapse;
+          border-radius: 12px;
+          overflow: hidden;
+          font-family: 'Arial', sans-serif;
+          background: linear-gradient(145deg, #184273, #1c3b6a);
+        }
+        .points-table thead {
+          background: linear-gradient(145deg, #233a6b, #2a4a8a);
         }
         .points-table th,
         .points-table td {
-          padding: 8px;
-          border: 1px solid #fff;
+          padding: 14px 20px;
           text-align: center;
-          max-width: 100px;
-          overflow: hidden;
-          text-overflow: ellipsis;
           white-space: nowrap;
+          font-variant-numeric: tabular-nums;
+          border: none;
+          color: #fff;
         }
         .points-table th {
-          background: linear-gradient(45deg, #1e3d59, #2a5298);
+          font-weight: 600;
+          border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .points-table td {
+          background: transparent;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .points-table tr:nth-child(even) td {
+          background: rgba(26, 54, 90, 0.25);
+        }
+        .points-table tr:hover td {
+          background: rgba(26, 54, 90, 0.45);
+          transition: background 0.3s ease;
         }
         .team-logo {
           width: 40px;
           height: 40px;
           border-radius: 50%;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+        .base-text {
+          vertical-align: middle;
+          font-size: 1rem;
+        }
+        .exponent {
+          display: inline-flex;
+          align-items: center;
+          margin-left: 6px;
+          font-size: 0.85rem;
+          line-height: 1;
+        }
+        .arrow {
+          margin-right: 2px;
+          font-size: 1rem;
         }
         .credit {
           margin-top: 10px;
@@ -225,7 +305,7 @@ const Standings = ({ contestants, prevStandings }) => {
           margin-top: 20px;
           padding: 10px 20px;
           border: none;
-          border-radius: 5px;
+          border-radius: 8px;
           background: #415a77;
           color: #fff;
           cursor: pointer;
@@ -256,6 +336,7 @@ const ManageScores = ({ contestants, setContestants, setPrevStandings }) => {
   };
 
   const handleSave = () => {
+    // Sort the updated array by points (descending)
     const sortedEdited = [...editedContestants].sort((a, b) => b.points - a.points);
     // Save current standings as previous before updating.
     setPrevStandings(contestants);
@@ -294,12 +375,14 @@ const ManageScores = ({ contestants, setContestants, setPrevStandings }) => {
       <style jsx>{`
         h1 {
           margin-bottom: 20px;
+          font-family: 'Arial', sans-serif;
         }
         .scores-list {
           margin: auto;
           text-align: left;
           width: 60%;
           padding: 10px;
+          font-family: 'Arial', sans-serif;
         }
         .score-item {
           display: flex;
