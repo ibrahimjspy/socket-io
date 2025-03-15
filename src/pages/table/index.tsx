@@ -1,15 +1,39 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
-import { CSKLOGO, GTLOGO, KKRLOGO, MI_ICON, RCBLOGO, TROPYICON } from './constants';
+import { CSKLOGO, GTLOGO, KKRLOGO, MI_ICON, RCBLOGO, SRH_LOGO, matchSchedule } from './constants';
 
-// Updated player colors for a modern look
+// Current contestants data
 const initialContestants = [
   { name: 'Adeel', team: 'KKR', points: 0, sp: 0, championships: 2, color: 'rgba(220, 20, 60, 0.15)', logo: KKRLOGO },
   { name: 'Hadi', team: 'GT', points: 0, sp: 0, championships: 2, color: 'rgba(30, 144, 255, 0.15)', logo: GTLOGO },
   { name: 'Wahab', team: 'SRH', points: 0, sp: 0, championships: 1, color: 'rgba(255, 140, 0, 0.15)', logo: RCBLOGO },
   { name: 'Ibi', team: 'CSK', points: 0, sp: 0, championships: 0, color: 'rgba(255, 215, 0, 0.15)', logo: CSKLOGO },
-  { name: 'Mavia', team: 'MI', points: 0, sp: 0, championships: 0, color: 'rgba(60, 179, 113, 0.15)', logo: MI_ICON }
+  { name: 'Mavia', team: 'LSG', points: 0, sp: 0, championships: 0, color: 'rgba(60, 179, 113, 0.15)', logo: 'images/lsgf.png' }
 ];
+
+const teamShortForms = {
+  "Kolkata Knight Riders": "KKR",
+  "Royal Challengers Bengaluru": "RCB",
+  "Sunrisers Hyderabad": "SRH",
+  "Rajasthan Royals": "RR",
+  "Chennai Super Kings": "CSK",
+  "Mumbai Indians": "MI",
+  "Delhi Capitals": "DC",
+  "Lucknow Super Giants": "LSG",
+  "Gujarat Titans": "GT",
+  "Punjab Kings": "PK",
+  "To be announced": "TBA"
+};
+
+
+
+// Helper function to parse date strings in dd/MM/yyyy HH:mm format.
+const parseDate = (dateStr) => {
+  const [datePart, timePart] = dateStr.split(' ');
+  const [day, month, year] = datePart.split('/');
+  const [hours, minutes] = timePart.split(':');
+  return new Date(year, month - 1, day, hours, minutes);
+};
 
 const Home = () => {
   const [mounted, setMounted] = useState(false);
@@ -102,9 +126,16 @@ const Home = () => {
 const Standings = ({ contestants, prevStandings }) => {
   const standingsRef = useRef(null);
 
+  // Compute next two fixtures for export (based on current time)
+  const now = new Date();
+  const upcomingMatches = matchSchedule
+    .filter(match => parseDate(match.date) > now)
+    .sort((a, b) => parseDate(a.date) - parseDate(b.date));
+  const nextFixtures = upcomingMatches.slice(0, 2);
+
   const exportImage = () => {
     if (!standingsRef.current) return;
-    html2canvas(standingsRef.current, { backgroundColor: '#0d1b2a' }).then(canvas => {
+    html2canvas(standingsRef.current, { backgroundColor: '#0d1b2a', scale: 5 }).then(canvas => {
       const link = document.createElement('a');
       link.download = 'standings.png';
       link.href = canvas.toDataURL();
@@ -115,16 +146,15 @@ const Standings = ({ contestants, prevStandings }) => {
   return (
     <div>
       <h1>Standings</h1>
-      {/* Export container with heading added */}
       <div ref={standingsRef} className="export-container">
-        <h2 className="export-heading">IPL</h2>
+        <h2 className="export-heading">Points table</h2>
+
         <div className="table-wrap">
           <table className="points-table">
             <thead>
               <tr>
-                <th>Logo</th>
-                <th>Name</th>
                 <th>Team</th>
+                <th>Name</th>
                 <th>SP</th>
                 <th>Points</th>
               </tr>
@@ -137,76 +167,83 @@ const Standings = ({ contestants, prevStandings }) => {
                 const pointsDiff = prevContestant ? cont.points - prevContestant.points : 0;
                 return (
                   <tr key={cont.name} style={{ backgroundColor: cont.color }}>
-                    {/* Logo */}
                     <td>
                       <img src={cont.logo} alt={`${cont.team} Logo`} className="team-logo" />
                     </td>
-
-                    {/* Name + Rank Change */}
-                   <td className="left-align">
-  <span style={{ position: 'relative', display: 'inline-block' }}>
-    {/* Base Name + Championship Stars */}
-    {cont.name} {cont.championships > 0 && '⭐'.repeat(cont.championships)}
-
-    {/* Rank Change as Superscript */}
-    {rankChange !== 0 && (
-      <sup
-        style={{
-          position: 'absolute',
-          top: '-0.6em',       // Adjust vertically
-          right: '-1.5em',     // Adjust horizontally
-          fontSize: '0.65em',  // Makes it smaller
-          lineHeight: 1,
-          fontWeight: 'bold',
-          color: rankChange > 0 ? 'limegreen' : 'tomato'
-        }}
-      >
-        {rankChange > 0 ? '↑' : '↓'}
-        {Math.abs(rankChange)}
-      </sup>
-    )}
-  </span>
-</td>
-
-
-                    {/* Team */}
-                    <td>{cont.team}</td>
-
-                    {/* SP */}
+                    <td className="left-align">
+                      <span style={{ position: 'relative', display: 'inline-block' }}>
+                        {cont.name} {cont.championships > 0 && '⭐'.repeat(cont.championships)}
+                        {rankChange !== 0 && (
+                          <sup
+                            style={{
+                              position: 'absolute',
+                              top: '-0.6em',
+                              right: '-1.5em',
+                              fontSize: '0.65em',
+                              lineHeight: 1,
+                              fontWeight: 'bold',
+                              color: rankChange > 0 ? 'limegreen' : 'tomato'
+                            }}
+                          >
+                            {rankChange > 0 ? '↑' : '↓'}
+                            {Math.abs(rankChange)}
+                          </sup>
+                        )}
+                      </span>
+                    </td>
                     <td>{cont.sp}</td>
-
-                    {/* Points + Points Difference */}
-<td className="centered">
-  <span style={{ position: 'relative', display: 'inline-block' }}>
-    {/* Base Points */}
-    {cont.points}
-
-    {/* Exponent for Points Difference */}
-    {pointsDiff !== 0 && (
-      <sup
-        style={{
-          position: 'absolute',
-          top: '-0.9em',        // Adjust to move up/down
-          left: cont.points > 20 ? '2em' : '1em',      // Adjust to move left/right
-          fontSize: '0.65em',   // Makes it smaller than the base text
-          lineHeight: 1,
-          color: pointsDiff > 0 ? 'limegreen' : 'tomato',
-          fontWeight: 'bold'
-        }}
-      >
-        {pointsDiff > 0 ? '↑' : '↓'}
-        {Math.abs(pointsDiff).toFixed(1)}
-      </sup>
-    )}
-  </span>
-</td>
+                    <td className="centered">
+                      <span style={{ position: 'relative', display: 'inline-block' }}>
+                        {cont.points}
+                        {pointsDiff !== 0 && (
+                          <sup
+                            style={{
+                              position: 'absolute',
+                              top: '-0.9em',
+                              left: cont.points > 20 ? '2em' : '1em',
+                              fontSize: '0.65em',
+                              lineHeight: 1,
+                              color: pointsDiff > 0 ? 'limegreen' : 'tomato',
+                              fontWeight: 'bold'
+                            }}
+                          >
+                            {pointsDiff > 0 ? '↑' : '↓'}
+                            {Math.abs(pointsDiff).toFixed(1)}
+                          </sup>
+                        )}
+                      </span>
+                    </td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-        {/* Credit text added inside the export container */}
+                {/* Next Fixtures small element for export */}
+{nextFixtures.length > 0 && (
+  <div className="next-fixtures" style={{ marginTop: '20px' }}>
+    <h3>Next Fixtures</h3>
+    {nextFixtures.map(match => {
+      const matchDate = parseDate(match.date);
+      const dayOfWeek = matchDate.toLocaleString('en-US', { weekday: 'long' });
+      return (
+        <div key={match.matchNumber} className="fixture-item">
+          <span className="fixture-info">
+            <span style={{ color: '#91caed' }}>
+              {teamShortForms[match.homeTeam]}
+            </span> vs {teamShortForms[match.awayTeam]}
+          </span>
+          <span className="fixture-date">
+            {dayOfWeek}
+          </span>
+        </div>
+      );
+    })}
+  </div>
+)}
+
+
+
         <div className="credit">Credit: IBI</div>
       </div>
       <button onClick={exportImage} className="export-button">
@@ -235,6 +272,34 @@ const Standings = ({ contestants, prevStandings }) => {
           text-align: center;
           text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
+        .next-fixtures {
+          background: rgba(255, 255, 255, 0.1);
+          padding: 10px;
+          border-radius: 8px;
+          margin-bottom: 20px;
+          font-size: 0.85rem;
+          text-align: left;
+        }
+        .next-fixtures h3 {
+          margin: 0 0 5px;
+          font-size: 1rem;
+          color: #fff;
+        }
+        .fixture-item {
+          display: flex;
+          justify-content: space-between;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          padding: 3px 0;
+        }
+        .fixture-item:last-child {
+          border-bottom: none;
+        }
+        .fixture-info {
+          font-weight: bold;
+        }
+        .fixture-date {
+          font-style: italic;
+        }
         .table-wrap {
           overflow-x: auto;
         }
@@ -244,7 +309,6 @@ const Standings = ({ contestants, prevStandings }) => {
           border-collapse: collapse;
           border-radius: 12px;
           overflow: hidden;
-          font-family: 'Arial', sans-serif;
           background: linear-gradient(145deg, #184273, #1c3b6a);
         }
         .points-table thead {
@@ -279,21 +343,6 @@ const Standings = ({ contestants, prevStandings }) => {
           height: 40px;
           border-radius: 50%;
           box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-        }
-        .base-text {
-          vertical-align: middle;
-          font-size: 1rem;
-        }
-        .exponent {
-          display: inline-flex;
-          align-items: center;
-          margin-left: 6px;
-          font-size: 0.85rem;
-          line-height: 1;
-        }
-        .arrow {
-          margin-right: 2px;
-          font-size: 1rem;
         }
         .credit {
           margin-top: 10px;
@@ -336,9 +385,7 @@ const ManageScores = ({ contestants, setContestants, setPrevStandings }) => {
   };
 
   const handleSave = () => {
-    // Sort the updated array by points (descending)
     const sortedEdited = [...editedContestants].sort((a, b) => b.points - a.points);
-    // Save current standings as previous before updating.
     setPrevStandings(contestants);
     setContestants(sortedEdited);
   };
