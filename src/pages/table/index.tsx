@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import { CSKLOGO, GTLOGO, KKRLOGO, MI_ICON, RCBLOGO, SRH_LOGO, matchSchedule } from './constants';
+import { ManageScores } from 'src/components/ManageScores';
 
-// Current contestants data
+// Updated contestants with subtle hints of IPL team colors.
 const initialContestants = [
-  { name: 'Adeel', team: 'KKR', points: 0, sp: 0, championships: 2, color: 'rgba(220, 20, 60, 0.15)', logo: KKRLOGO },
-  { name: 'Hadi', team: 'GT', points: 0, sp: 0, championships: 2, color: 'rgba(30, 144, 255, 0.15)', logo: GTLOGO },
-  { name: 'Wahab', team: 'SRH', points: 0, sp: 0, championships: 1, color: 'rgba(255, 140, 0, 0.15)', logo: RCBLOGO },
-  { name: 'Ibi', team: 'CSK', points: 0, sp: 0, championships: 0, color: 'rgba(255, 215, 0, 0.15)', logo: CSKLOGO },
-  { name: 'Mavia', team: 'LSG', points: 0, sp: 0, championships: 0, color: 'rgba(60, 179, 113, 0.15)', logo: 'images/lsgf.png' }
+  { name: 'Adeel', team: 'KKR', points: 0, sp: 0,  streak: 0,  championships: 2, color: 'rgba(220, 20, 60, 0.15)', logo: KKRLOGO },
+  { name: 'Hadi', team: 'GT', points: 0, sp: 0,  streak: 0, championships: 2, color: 'rgba(30, 144, 255, 0.15)', logo: GTLOGO },
+  { name: 'Wahab', team: 'SRH', points: 0, sp: 0,  streak: 0, championships: 1, color: 'rgba(255, 140, 0, 0.15)', logo: RCBLOGO },
+  { name: 'Ibi', team: 'CSK', points: 0, sp: 0,  streak: 0, championships: 0, color: 'rgba(255, 215, 0, 0.15)', logo: CSKLOGO },
+  { name: 'Mavia', team: 'LSG', points: 0, sp: 0, streak: 0,  championships: 0, color: 'rgba(60, 179, 113, 0.15)', logo: 'images/lsgf.png' }
 ];
 
 const teamShortForms = {
@@ -24,8 +25,6 @@ const teamShortForms = {
   "Punjab Kings": "PK",
   "To be announced": "TBA"
 };
-
-
 
 // Helper function to parse date strings in dd/MM/yyyy HH:mm format.
 const parseDate = (dateStr) => {
@@ -84,7 +83,8 @@ const Home = () => {
         <ManageScores
           contestants={contestants}
           setContestants={setContestants}
-          setPrevStandings={setPrevStandings}
+            setPrevStandings={setPrevStandings}
+            prevStandings={prevStandings}
         />
       )}
       <footer className="footer">Managed by IBI</footer>
@@ -219,31 +219,28 @@ const Standings = ({ contestants, prevStandings }) => {
             </tbody>
           </table>
         </div>
-                {/* Next Fixtures small element for export */}
-{nextFixtures.length > 0 && (
-  <div className="next-fixtures" style={{ marginTop: '20px' }}>
-    <h3>Next Fixtures</h3>
-    {nextFixtures.map(match => {
-      const matchDate = parseDate(match.date);
-      const dayOfWeek = matchDate.toLocaleString('en-US', { weekday: 'long' });
-      return (
-        <div key={match.matchNumber} className="fixture-item">
-          <span className="fixture-info">
-            <span style={{ color: '#91caed' }}>
-              {teamShortForms[match.homeTeam]}
-            </span> vs {teamShortForms[match.awayTeam]}
-          </span>
-          <span className="fixture-date">
-            {dayOfWeek}
-          </span>
-        </div>
-      );
-    })}
-  </div>
-)}
-
-
-
+        {/* Next Fixtures small element for export */}
+        {nextFixtures.length > 0 && (
+          <div className="next-fixtures">
+            <h3>Next Fixtures</h3>
+            {nextFixtures.map(match => {
+              const matchDate = parseDate(match.date);
+              const dayOfWeek = matchDate.toLocaleString('en-US', { weekday: 'long' });
+              return (
+                <div key={match.matchNumber} className="fixture-item">
+                  <span className="fixture-info">
+                    <span style={{ color: '#91caed' }}>
+                      {teamShortForms[match.homeTeam]}
+                    </span> vs {teamShortForms[match.awayTeam]}
+                  </span>
+                  <span className="fixture-date">
+                    {dayOfWeek}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="credit">Credit: IBI</div>
       </div>
       <button onClick={exportImage} className="export-button">
@@ -252,6 +249,7 @@ const Standings = ({ contestants, prevStandings }) => {
       <style jsx>{`
         h1 {
           margin-bottom: 20px;
+          font-family: 'Arial', sans-serif;
         }
         .export-container {
           width: 90%;
@@ -276,7 +274,7 @@ const Standings = ({ contestants, prevStandings }) => {
           background: rgba(255, 255, 255, 0.1);
           padding: 10px;
           border-radius: 8px;
-          margin-bottom: 20px;
+          margin: 20px 0;
           font-size: 0.85rem;
           text-align: left;
         }
@@ -361,105 +359,6 @@ const Standings = ({ contestants, prevStandings }) => {
           transition: background 0.3s;
         }
         .export-button:hover {
-          background: #778da9;
-        }
-      `}</style>
-    </div>
-  );
-};
-
-const ManageScores = ({ contestants, setContestants, setPrevStandings }) => {
-  const [editedContestants, setEditedContestants] = useState(contestants);
-
-  useEffect(() => {
-    setEditedContestants(contestants);
-  }, [contestants]);
-
-  const handleInputChange = (index, field, value) => {
-    const updated = [...editedContestants];
-    updated[index] = {
-      ...updated[index],
-      [field]: value === '' ? '' : parseFloat(value)
-    };
-    setEditedContestants(updated);
-  };
-
-  const handleSave = () => {
-    const sortedEdited = [...editedContestants].sort((a, b) => b.points - a.points);
-    setPrevStandings(contestants);
-    setContestants(sortedEdited);
-  };
-
-  return (
-    <div>
-      <h1>Manage Scores</h1>
-      <div className="scores-list">
-        {editedContestants.map((cont, index) => (
-          <div key={cont.name} className="score-item">
-            <span className="name"><strong>{cont.name}</strong></span>
-            <span>
-              Points:{' '}
-              <input
-                type="number"
-                value={cont.points}
-                onChange={(e) => handleInputChange(index, 'points', e.target.value)}
-              />
-            </span>
-            <span>
-              SP:{' '}
-              <input
-                type="number"
-                value={cont.sp}
-                onChange={(e) => handleInputChange(index, 'sp', e.target.value)}
-              />
-            </span>
-          </div>
-        ))}
-      </div>
-      <button onClick={handleSave} className="save-button">
-        Save Changes
-      </button>
-      <style jsx>{`
-        h1 {
-          margin-bottom: 20px;
-          font-family: 'Arial', sans-serif;
-        }
-        .scores-list {
-          margin: auto;
-          text-align: left;
-          width: 60%;
-          padding: 10px;
-          font-family: 'Arial', sans-serif;
-        }
-        .score-item {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 10px;
-          border-bottom: 1px solid #444;
-        }
-        .score-item span {
-          margin: 0 10px;
-          color: #fff;
-        }
-        input {
-          margin-left: 5px;
-          padding: 5px;
-          width: 80px;
-          border: 1px solid #ccc;
-          border-radius: 3px;
-        }
-        .save-button {
-          margin-top: 20px;
-          padding: 10px 20px;
-          border: none;
-          border-radius: 5px;
-          background: #415a77;
-          color: #fff;
-          cursor: pointer;
-          transition: background 0.3s;
-        }
-        .save-button:hover {
           background: #778da9;
         }
       `}</style>
